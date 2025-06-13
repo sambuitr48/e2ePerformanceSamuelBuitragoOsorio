@@ -98,13 +98,27 @@ jobs:
           sudo mv apache-jmeter-${JMETER_VERSION} /opt/jmeter
           sudo ln -s /opt/jmeter/bin/jmeter /usr/local/bin/jmeter
 
+      - name: Verify JMeter test file exists
+        run: |
+          JMETER_TEST_PATH="src/test/java/co/cue/edu/apploginsamuelbuitrago/jmeter/register_test.jmx"
+          if [ ! -f "$JMETER_TEST_PATH" ]; then
+            echo "::error::JMeter test file not found at $JMETER_TEST_PATH"
+            echo "Current directory structure:"
+            find src/test/java/co/cue/edu/apploginsamuelbuitrago -type f
+            exit 1
+          else
+            echo "JMeter test file found at $JMETER_TEST_PATH"
+            ls -la "$JMETER_TEST_PATH"
+          fi
+
       - name: Run JMeter tests
         run: |
           mkdir -p test-results/jmeter
           jmeter -n \
-            -t test/java/co/cue/edu/apploginsamuelbuitrago/register_test.jmx \
+            -t src/test/java/co/cue/edu/apploginsamuelbuitrago/jmeter/register_test.jmx \
             -l test-results/jmeter/results.jtl \
-            -e -o test-results/jmeter/report
+            -e -o test-results/jmeter/report \
+            -Jserver.rmi.ssl.disable=true
       
 
       - name: Upload test results
