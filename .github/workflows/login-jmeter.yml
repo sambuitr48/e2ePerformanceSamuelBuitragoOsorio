@@ -102,9 +102,10 @@ jobs:
         run: |
           mkdir -p test-results/jmeter
           jmeter -n \
-            -t src/test/jmeter/register_test.jmx \
+            -t test/java/co/cue/edu/apploginsamuelbuitrago/register_test.jmx \
             -l test-results/jmeter/results.jtl \
             -e -o test-results/jmeter/report
+      
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
