@@ -11,6 +11,7 @@ env:
   SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/testdb
   SPRING_DATASOURCE_USERNAME: postgres
   SPRING_DATASOURCE_PASSWORD: postgres
+  JAVA_TOOL_OPTIONS: -Dfile.encoding=UTF-8
 
 jobs:
   build-and-test:
@@ -32,7 +33,12 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Grant execute permission to Maven Wrapper
-        run: chmod +x mvnw
+        run: |
+          chmod +x mvnw
+          chmod +x mvnw.cmd
+
+      - name: Verify file permissions
+        run: ls -la mvnw*
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -41,26 +47,44 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      - name: Build application
-        run: ./mvnw clean package -DskipTests
+      - name: Build with PostgreSQL driver
+        run: |
+          ./mvnw clean package -DskipTests -Dfile.encoding=UTF-8
+          # Verificar que el driver PostgreSQL está incluido
+          ls -la target/*.jar
+          jar tf target/*.jar | grep postgresql || echo "PostgreSQL driver not found in JAR"
+        env:
+          MAVEN_OPTS: -Dfile.encoding=UTF-8
+
+      - name: Verify PostgreSQL driver in classpath
+        run: |
+          ./mvnw dependency:tree | grep postgresql || echo "PostgreSQL dependency not found"
 
       - name: Set up Chrome for Selenium
         uses: browser-actions/setup-chrome@v1
         with:
           chrome-version: 'latest'
 
-      - name: Start application
+      - name: Start application with debug
         run: |
-          java -jar target/*.jar &
-          echo "Waiting for application to start..."
-          timeout 60 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' http://localhost:8080/register)" != "200" ]]; do sleep 5; done' || false
+          java -jar target/*.jar --debug &
+          echo "Waiting for application to start (max 2 minutes)..."
+          timeout 120 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' http://localhost:8080/register)" != "200" ]]; do 
+            echo "Retrying..."; 
+            sleep 5; 
+          done' || echo "Application failed to start"
+          curl -v http://localhost:8080/register
+          ps aux | grep java
 
       - name: Run E2E tests
         run: |
           sudo apt-get install -y xvfb
           Xvfb :99 -screen 0 1280x1024x24 &
           export DISPLAY=:99
-          ./mvnw test -Dtest=LoginTest
+          ./mvnw test -Dtest=LoginTest \
+            -Dspring.datasource.url=jdbc:postgresql://localhost:5432/testdb \
+            -Dspring.datasource.username=postgres \
+            -Dspring.datasource.password=postgres
         env:
           DISPLAY: ":99"
 
@@ -89,4 +113,5 @@ jobs:
           path: |
             target/surefire-reports
             test-results/jmeter
+            target/*.jar
         if: always()
