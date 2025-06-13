@@ -50,7 +50,7 @@ jobs:
         run: |
           java -jar target/*.jar &
           echo "Waiting for application to start..."
-          timeout 60 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' http://localhost:8080/actuator/health)" != "200" ]]; do sleep 5; done' || false
+          timeout 60 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' http://localhost:8080/register)" != "200" ]]; do sleep 5; done' || false
 
       - name: Run E2E tests
         run: |
@@ -61,10 +61,15 @@ jobs:
         env:
           DISPLAY: ":99"
 
-      - name: Setup JMeter
-        uses: aws-actions/setup-jmeter@v1
-        with:
-          version: '5.6.3'
+      - name: Install JMeter
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget unzip
+          JMETER_VERSION=5.6.3
+          wget https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-${JMETER_VERSION}.tgz
+          tar -xzf apache-jmeter-${JMETER_VERSION}.tgz
+          sudo mv apache-jmeter-${JMETER_VERSION} /opt/jmeter
+          sudo ln -s /opt/jmeter/bin/jmeter /usr/local/bin/jmeter
 
       - name: Run JMeter tests
         run: |
