@@ -39,7 +39,8 @@ jobs:
           sudo apt-get install -y xvfb
           Xvfb :99 -ac &
           export DISPLAY=:99
-          ./mvnw test -Dtest=LoginTest
+          ./mvnw -e -X test -Dtest=LoginTest
+      
 
       - name: Install JMeter
         run: |
