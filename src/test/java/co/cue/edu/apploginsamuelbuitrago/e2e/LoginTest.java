@@ -4,6 +4,10 @@ import org.junit.jupiter.api.*;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -30,11 +34,15 @@ public class LoginTest {
 
         driver.findElement(By.id("email")).sendKeys(TEST_EMAIL);
         driver.findElement(By.id("password")).sendKeys(TEST_PASSWORD);
-        driver.findElement(By.tagName("button")).click();
 
-        WebElement mensaje = driver.findElement(By.className("message"));
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        WebElement boton = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("button[type='submit']")));
+        boton.click();
+
+        WebElement mensaje = wait.until(ExpectedConditions.visibilityOfElementLocated(By.className("message")));
         assertTrue(mensaje.getText().contains("Usuario registrado"), "Mensaje de registro no detectado");
     }
+
 
     @Test
     @Order(2)
