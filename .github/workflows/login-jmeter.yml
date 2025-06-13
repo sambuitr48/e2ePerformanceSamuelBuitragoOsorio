@@ -58,7 +58,8 @@ jobs:
             -e -o results/report
 
       - name: Upload JMeter HTML Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: jmeter-html-report
           path: results/report
+
