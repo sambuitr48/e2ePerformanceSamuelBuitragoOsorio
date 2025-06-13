@@ -3,6 +3,7 @@ package co.cue.edu.apploginsamuelbuitrago.e2e;
 import org.junit.jupiter.api.*;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -16,10 +17,10 @@ public class LoginTest {
 
     @BeforeAll
     public static void setUp() {
-        // Usa una ruta absoluta o coloca el chromedriver.exe en el directorio raíz del proyecto
-        System.setProperty("webdriver.chrome.driver", "C:\\Users\\ELIANA\\Desktop\\appLoginSamuelBuitrago\\chromedriver.exe");
-        driver = new ChromeDriver();
-        driver.manage().window().maximize();
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--headless", "--no-sandbox", "--disable-dev-shm-usage");
+        driver = new ChromeDriver(options);
+        driver.manage().window().setSize(new Dimension(1280, 800));
     }
 
     @Test

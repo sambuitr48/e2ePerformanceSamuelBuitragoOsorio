@@ -1,4 +1,4 @@
-name: Spring Boot + JMeter Performance Test
+name: Spring Boot - E2E + JMeter Performance Test
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  performance-test:
+  full-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,13 +23,23 @@ jobs:
       - name: Grant execute permission to Maven wrapper
         run: chmod +x mvnw
 
-      - name: Build with Maven (compila sin test)
-        run: ./mvnw clean install -DskipTests
+      - name: Build with Maven
+        run: ./mvnw clean install
 
-      - name: Run Spring Boot in background
+      - name: Install Chrome and Chromedriver
+        uses: browser-actions/setup-chrome@v1
+
+      - name: Start Spring Boot App in background
         run: |
           ./mvnw spring-boot:run &
-          sleep 30  # Espera a que arranque la app
+          sleep 30
+
+      - name: Run Selenium E2E tests (LoginTest)
+        run: |
+          sudo apt-get install -y xvfb
+          Xvfb :99 -ac &
+          export DISPLAY=:99
+          ./mvnw test -Dtest=LoginTest
 
       - name: Install JMeter
         run: |
